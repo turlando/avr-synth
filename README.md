@@ -8,4 +8,5 @@
 - avr-libc
 - make
 - avrdude
-- ctags (optional)
+- ctags (optional, for code completion in editors)
+- screen (optional, for serial monitor)
