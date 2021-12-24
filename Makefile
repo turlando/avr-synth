@@ -5,9 +5,11 @@ OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
 CTAGS   = ctags
 ETAGS   = ctags -e
+SCREEN  = screen
 
-AVRDUDE_PORT = /dev/ttyACM0
-AVRDUDE_BAUD = 115200
+SERIAL_DEVICE = /dev/ttyACM0
+AVRDUDE_BAUD  = 115200
+SCREEN_BAUD   = 9600
 
 ################################################################################
 
@@ -46,7 +48,7 @@ LDFLAGS := -Wall -Wextra            \
 
 AVRDUDEFLAGS := -F -V                                 \
                 -c arduino -p $(MICROCONTROLLER)      \
-                -P $(AVRDUDE_PORT) -b $(AVRDUDE_BAUD)
+                -P $(SERIAL_DEVICE) -b $(AVRDUDE_BAUD)
 
 ################################################################################
 
@@ -71,10 +73,6 @@ tags: $(C_SRCS)
 TAGS: $(C_SRCS)
 	$(ETAGS) $^
 
-.PHONY: flash
-flash: $(TARGET).hex
-	$(AVRDUDE) $(AVRDUDEFLAGS) -U flash:w:$<
-
 .PHONY: clean
 clean:
 	rm -f $(C_OBJS)
@@ -85,6 +83,14 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -f $(TARGET).hex
+
+.PHONY: flash
+flash: $(TARGET).hex
+	$(AVRDUDE) $(AVRDUDEFLAGS) -U flash:w:$<
+
+.PHONY: serial
+serial:
+	$(SCREEN) $(SERIAL_DEVICE) $(SCREEN_BAUD)
 
 -include $(C_DEPS)
 
