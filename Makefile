@@ -2,6 +2,7 @@
 
 CC      = avr-gcc
 OBJCOPY = avr-objcopy
+SIZE    = avr-size
 AVRDUDE = avrdude
 CTAGS   = ctags
 ETAGS   = ctags -e
@@ -83,6 +84,10 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -f $(TARGET).hex
+
+.PHONY: size
+size: $(TARGET).elf
+	$(SIZE) -C --mcu=$(MICROCONTROLLER) $<
 
 .PHONY: flash
 flash: $(TARGET).hex
