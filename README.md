@@ -15,6 +15,8 @@
 
 ### Variables
 
+Usage is `make VAR=value target`.
+
 - `SERIAL_DEVICE` - Serial device used by `flash` and `serial` target.
   Default: `/dev/ttyACM0`
 - `AVRDUDE_BAUD` - Baud rate used by avrdude. Default: 115200
@@ -22,8 +24,11 @@
 
 ### Targets
 
+Usage is `make target`.
+
 - `all` - Compile everything
 - `clean` - Remove object files, dependency files, ELF file and ctags
 - `distclean` - `clean` and remove hex file
 - `flash` - Flash the microcontroller
 - `serial` - Start the serial monitor
+- `size` - Show program and data memory usage
