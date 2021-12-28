@@ -1,6 +1,7 @@
 #include <USART.h>
 
 #include <stdint.h>
+#include <avr/io.h>
 
 void USART_init(
     const uint32_t baud,
