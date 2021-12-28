@@ -31,7 +31,6 @@ INCLUDES := -I$(INCLUDE_PATH)
 
 CFLAGS := -std=c11 -pedantic       \
           -Wall -Wextra            \
-          -c                       \
           -Os                      \
           -flto                    \
           -ffunction-sections      \
@@ -62,17 +61,27 @@ C_DEPS := $(C_OBJS:.o=.d)
 .PHONY: all
 all: $(TARGET).hex
 
+################################################################################
+
 $(TARGET).elf: $(C_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
 
+%.o: %.c
+	$(CC) $(CFLAGS) -MMD -MF $(patsubst %.o, %.d, $@) -o $@ -c $<
+
+
 tags: $(C_SRCS)
 	$(CTAGS) $^
 
 TAGS: $(C_SRCS)
 	$(ETAGS) $^
+
+-include $(C_DEPS)
+
+################################################################################
 
 .PHONY: clean
 clean:
@@ -96,7 +105,5 @@ flash: $(TARGET).hex
 .PHONY: serial
 serial:
 	$(SCREEN) $(SERIAL_DEVICE) $(SCREEN_BAUD)
-
--include $(C_DEPS)
 
 ################################################################################
