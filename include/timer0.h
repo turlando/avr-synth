@@ -3,7 +3,15 @@
 
 #include <stdint.h>
 
-/* 16 bits representing TCCR0B << 8 | TCCR0A */
+/*
+ * The values of the members of this enum are 16 bits long and are the
+ * concatenation of the the required bits in TCCR0B and in TCCR0A for a
+ * given timer configuration.
+ * This is due the fact that the timer configuration happens across those
+ * two register and this allows to specify the bit configuration for both
+ * registers at once using a single enum member.
+ * Summing it up, each member contains TCCR0B << 8 | TCCR0A.
+ */
 enum timer0_waveform_generation_mode {
     /*                     WGM02   | WGM01  | WGM00 */
     TIMER0_WGM_NORMAL    = 0 << 11 | 0 << 1 | 0 << 0,
@@ -15,7 +23,7 @@ enum timer0_waveform_generation_mode {
 };
 
 enum timer0_clock_select {
-    /*            CS02   | CS01   | CS00 */
+    /*                      CS02   | CS01   | CS00 */
     TIMER0_CS_NO_CLOCK    = 0 << 2 | 0 << 1 | 0 << 0,
     TIMER0_CS_NO_SCALING  = 0 << 2 | 0 << 1 | 1 << 0,
     TIMER0_CS_DIV_8       = 0 << 2 | 1 << 1 | 0 << 0,
@@ -26,9 +34,14 @@ enum timer0_clock_select {
     TIMER0_CS_EXT_RISING  = 1 << 2 | 1 << 1 | 0 << 0,
 };
 
-/* To be shifted by 6 for COM0An and by 4 for COM0Bn */
+/*
+ * COM0A0 and COM0A1 are bits 6 and 7 in TCCR0A.
+ * COM0B0 and COM0B1 are bits 4 and 5 in TCCR0A.
+ * Thus the value of the members of this enum must be left-shifted
+ * by 6 to set COM0An and by 4 to set COM0Bn.
+ */
 enum timer0_compare_output_mode {
-    /*         COM0x1 | COM0x0 */
+    /*                    COM0x1 | COM0x0 */
     TIMER0_COM_DISABLED = 0 << 1 | 0 << 0,
     TIMER0_COM_TOGGLE   = 0 << 1 | 1 << 0,
     TIMER0_COM_CLEAR    = 1 << 1 | 0 << 0,
