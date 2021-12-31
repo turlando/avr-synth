@@ -31,7 +31,7 @@ INCLUDES := -I$(INCLUDE_PATH)
 
 CFLAGS := -std=c11 -pedantic       \
           -Wall -Wextra            \
-          -Os                      \
+          -Os -g3                  \
           -flto                    \
           -ffunction-sections      \
           -fdata-sections          \
@@ -40,7 +40,7 @@ CFLAGS := -std=c11 -pedantic       \
           $(INCLUDES)
 
 LDFLAGS := -Wall -Wextra            \
-           -Os                      \
+           -Os -g3                  \
            -flto                    \
            -fuse-linker-plugin      \
            -Wl,--gc-sections        \
