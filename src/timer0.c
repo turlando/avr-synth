@@ -26,3 +26,11 @@ void timer0_set_compare_register_a(const uint8_t value) {
 void timer0_set_compare_register_b(const uint8_t value) {
     OCR0B = value;
 }
+
+void timer0_wait_overflow() {
+    loop_until_bit_is_set(TIFR0, TOV0);
+}
+
+void timer0_clear_overflow() {
+    TIFR0 |= (1 << TOV0);
+}

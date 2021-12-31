@@ -61,4 +61,7 @@ void timer0_set_compare_register_a(uint8_t value);
 /* Drives OC0B, which is PD5, which is Arduino output 5 */
 void timer0_set_compare_register_b(uint8_t value);
 
+void timer0_wait_overflow();
+void timer0_clear_overflow();
+
 #endif /* TIMER0_H */
