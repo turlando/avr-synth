@@ -1,5 +1,5 @@
-#ifndef SIN_INT8_256_H
-#define SIN_INT8_256_H
+#ifndef WAVE_SIN_INT8_256_H
+#define WAVE_SIN_INT8_256_H
 
 #include <stdint.h>
 
@@ -40,4 +40,4 @@ int8_t SIN_INT8_256[SIN_INT8_256_SAMPLES] = {
      -25,  -22,  -19,  -16,  -13,  -10,   -7,   -4
 };
 
-#endif /* SIN_INT8_256_H */
+#endif /* WAVE_SIN_INT8_256_H */
