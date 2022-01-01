@@ -52,7 +52,10 @@ static const uint16_t lfo_step = DDS_STEP(lfo_frequency);
 static void loop(void);
 
 int main(void) {
-    port_d_set_output(PORT_D_PIN_6);
+    port_d_set_output(PORT_D_PIN_6); /* Speaker. Arduino port 6. */
+
+    port_d_set_input(PORT_D_PIN_2);  /* Button. Arduino port 2. */
+    port_d_set_pullup(PORT_D_PIN_2);
 
     timer0_init(
         TIMER0_WGM_PWM_FF,
@@ -94,8 +97,13 @@ static void loop(void) {
         mixer += SAW_INT8_256[step] >> OSCILLATOR_ATTENUATION;
     }
 
-    /* Convert from int8_t to uint8_t. */
-    uint8_t pwm_value = 128 + mixer;
+    /*
+     * Convert from int8_t to uint8_t.
+     * Play only when button is pressed.
+     */
+    uint8_t pwm_value = port_d_get_pin(PORT_D_PIN_2) == PORT_LOW
+                      ? 128 + mixer
+                      : 0;
 
     timer0_wait_overflow();
     timer0_set_compare_register_a(pwm_value);
