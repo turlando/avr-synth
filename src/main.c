@@ -29,20 +29,20 @@
 /* ************************************************************************** */
 
 /* Number of voices. */
-#define OSCILLATORS_COUNT 2
+#define OSCILLATORS_COUNT 4
 
 /* Volume of each oscillators is divided by 2^OSCILLATOR_ATTENUATION. */
-#define OSCILLATOR_ATTENUATION 1
+#define OSCILLATOR_ATTENUATION 2
 
 /* Voices frequency. */
-static const uint16_t oscillator_frequency = 440;
+static const uint16_t oscillator_frequency = 207; /* Ab3 */
 
 /*
- * Low Frequency Oscillator frequency.
- * It is used to modulate the phase shift over time of the second oscillator.
- * The phase of the second oscillator sweeps from 0% to 100% at such frequency.
+ * Low Frequency Oscillator frequency unscaled. This value is then divided by
+ * lfo_scale to obtain the effective frequency.
  */
 static const uint16_t lfo_frequency = 1;
+static const uint8_t lfo_scale = 8;
 
 static const uint16_t oscillator_step = DDS_STEP(oscillator_frequency);
 static const uint16_t lfo_step = DDS_STEP(lfo_frequency);
@@ -67,11 +67,21 @@ int main(void) {
 
 static void loop(void) {
     static uint16_t accumulators[OSCILLATORS_COUNT] = {0};
+    static uint8_t cycles = 0;
     uint16_t mixer = 0;
 
     for (uint8_t i = 0; i < OSCILLATORS_COUNT; i++) {
-        /* No phase shift for the first oscillator by multiplying by zero. */
-        accumulators[i] += oscillator_step + (lfo_step * i);
+        /*
+         * Each oscillator has a frequency of oscillator_frequency.
+         * Each oscillator escluding the first one (indexed by 0) has a phaser
+         * effect. This means that the oscillator changes its phase over time.
+         * This frequency is given by lfo_frequency / lfo_scale.
+         * Since we have not enough resolution to represent a value below 1Hz
+         * which is required by the LFO, every lfo_scale cycles we increment
+         * the accumulator by lfo_step.
+         */
+        accumulators[i] += oscillator_step;
+        accumulators[i] += cycles % lfo_scale == 0 ? lfo_step * i : 0;
 
         /* Truncate 16 bits step to most significant 8 bits. */
         uint8_t step = accumulators[i] >> 8;
@@ -90,4 +100,6 @@ static void loop(void) {
     timer0_wait_overflow();
     timer0_set_compare_register_a(pwm_value);
     timer0_clear_overflow();
+
+    cycles++;
 }
