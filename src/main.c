@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <avr/io.h>
 
 #include <port.h>
@@ -8,10 +9,19 @@
 /* ************************************************************************** */
 
 /*
- * PWM frequency when timer is running in fast PWM mode and with no prescaling.
+ * PWM overflow frequency when timer is running in fast PWM mode
+ * and with no prescaling.
  * Check ATmega328P datasheet section 14.7.3 Fast PWM Mode page 80.
  */
-#define PWM_FREQUENCY F_CPU / 256
+#define PWM_FREQUENCY F_CPU / 256U
+
+/*
+ * PWM overflow period in microseconds.
+ * PWM_PERIOD = 1 / PWM_FREQUENCY
+ */
+#define PWM_PERIOD 16U
+
+/* ************************************************************************** */
 
 /*
  * How to compute the DDS phase accumulator step.
@@ -29,10 +39,10 @@
 /* ************************************************************************** */
 
 /* Number of voices. */
-#define OSCILLATORS_COUNT 4
+#define OSCILLATORS_COUNT 1
 
 /* Volume of each oscillators is divided by 2^OSCILLATOR_ATTENUATION. */
-#define OSCILLATOR_ATTENUATION 2
+#define OSCILLATOR_ATTENUATION 0
 
 /* Voices frequency. */
 static const uint16_t oscillator_frequency = 207; /* Ab3 */
@@ -46,6 +56,20 @@ static const uint8_t lfo_scale = 8;
 
 static const uint16_t oscillator_step = DDS_STEP(oscillator_frequency);
 static const uint16_t lfo_step = DDS_STEP(lfo_frequency);
+
+/* ************************************************************************** */
+
+#define VOLUME_MAX 255U
+
+#define ADSR_CYCLES(ms) (ms) * 1000UL / (PWM_PERIOD)
+#define ADSR_RATE(cycles, volume_delta) (cycles) / volume_delta
+
+static const uint32_t attack_cycles = ADSR_CYCLES(5000);
+static const uint32_t attack_rate = ADSR_RATE(attack_cycles, VOLUME_MAX);
+
+/* ************************************************************************** */
+
+#define BUTTON_IS_PRESSED (port_d_get_pin(PORT_D_PIN_2) == PORT_LOW)
 
 /* ************************************************************************** */
 
@@ -69,45 +93,55 @@ int main(void) {
 }
 
 static void loop(void) {
-    static uint16_t accumulators[OSCILLATORS_COUNT] = {0};
+    static uint16_t accumulator = 0;
     static uint8_t cycles = 0;
-    uint16_t mixer = 0;
 
-    for (uint8_t i = 0; i < OSCILLATORS_COUNT; i++) {
-        /*
-         * Each oscillator has a frequency of oscillator_frequency.
-         * Each oscillator escluding the first one (indexed by 0) has a phaser
-         * effect. This means that the oscillator changes its phase over time.
-         * This frequency is given by lfo_frequency / lfo_scale.
-         * Since we have not enough resolution to represent a value below 1Hz
-         * which is required by the LFO, every lfo_scale cycles we increment
-         * the accumulator by lfo_step.
-         */
-        accumulators[i] += oscillator_step;
-        accumulators[i] += cycles % lfo_scale == 0 ? lfo_step * i : 0;
+    /* ********************************************************************** */
 
-        /* Truncate 16 bits step to most significant 8 bits. */
-        uint8_t step = accumulators[i] >> 8;
+    accumulator += oscillator_step;
 
-        /*
-         * Before adding a given sample in the wavetable to the output
-         * mixer we right-shift it by 1 in order to attenuate the oscillator
-         * volume and avoid clipping the output.
-         */
-        mixer += SAW_INT8_256[step] >> OSCILLATOR_ATTENUATION;
+    uint8_t step = accumulator >> 8;
+    uint16_t mixer = SAW_INT8_256[step];
+
+    /* ********************************************************************** */
+
+    static uint32_t volume = 0;
+    static uint32_t adsr_cycles = 0;
+    static bool button_was_pressed = false;
+
+    if (BUTTON_IS_PRESSED == true && button_was_pressed == false) {
+        button_was_pressed = true;
+        adsr_cycles = 0;
+    } else if (BUTTON_IS_PRESSED == false && button_was_pressed == true) {
+        button_was_pressed = false;
+        adsr_cycles = 0;
+    } else {
+        adsr_cycles++;
     }
 
-    /*
-     * Convert from int8_t to uint8_t.
-     * Play only when button is pressed.
-     */
-    uint8_t pwm_value = port_d_get_pin(PORT_D_PIN_2) == PORT_LOW
-                      ? 128 + mixer
-                      : 0;
+    if (
+        button_was_pressed == true
+        && adsr_cycles < attack_cycles
+        && adsr_cycles > attack_rate * volume
+        && volume < VOLUME_MAX
+    ) {
+        volume++;
+    } else if (button_was_pressed == false) {
+        volume = 0;
+    }
+
+    /* ********************************************************************** */
+
+    //uint8_t pwm_value = BUTTON_IS_PRESSED ? 128 + mixer : 0;
+    uint8_t pwm_value = ((128 + mixer) * volume) >> 8;
+
+    /* ********************************************************************** */
 
     timer0_wait_overflow();
     timer0_set_compare_register_a(pwm_value);
     timer0_clear_overflow();
+
+    /* ********************************************************************** */
 
     cycles++;
 }
