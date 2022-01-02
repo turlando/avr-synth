@@ -59,27 +59,45 @@ static const uint16_t lfo_step = DDS_STEP(lfo_frequency);
 
 /* ************************************************************************** */
 
-#define VOLUME_MAX 255U
+#define VOLUME_MAX 256U
 
 #define ADSR_CYCLES(ms) (ms) * 1000UL / (PWM_PERIOD)
-#define ADSR_RATE(cycles, volume_delta) (cycles) / volume_delta
+#define ADSR_RATE(cycles, volume_delta) (cycles) / (volume_delta)
 
-static const uint32_t attack_cycles = ADSR_CYCLES(5000);
+static const uint16_t attack_time   = 5000;
+static const uint16_t decay_time    = 5000;
+static const uint8_t sustain_volume = 127;
+static const uint16_t release_time  = 5000;
+
+static const uint32_t attack_cycles = ADSR_CYCLES(attack_time);
 static const uint32_t attack_rate = ADSR_RATE(attack_cycles, VOLUME_MAX);
+
+static const uint32_t decay_cycles = ADSR_CYCLES(5000);
+static const uint32_t decay_rate
+    = ADSR_RATE(decay_cycles, VOLUME_MAX - sustain_volume);
+
+static const uint32_t release_cycles = ADSR_CYCLES(release_time);
+static const uint32_t release_rate = ADSR_RATE(release_cycles, sustain_volume);
+
+enum adsr_state {
+    ADSR_NONE,
+    ADSR_ATTACK,
+    ADSR_DECAY,
+    ADSR_SUSTAIN,
+    ADSR_RELEASE
+};
 
 /* ************************************************************************** */
 
 #define BUTTON_IS_PRESSED (port_d_get_pin(PORT_D_PIN_2) == PORT_LOW)
 
-/* ************************************************************************** */
-
-enum button_event {
-    BUTTON_PRESS   = -1,
-    BUTTON_IDLE    = 0,
-    BUTTON_RELEASE = 1,
+static enum button_event {
+    BUTTON_PRESS,
+    BUTTON_IDLE,
+    BUTTON_RELEASE,
 };
 
-enum button_event button_read_event() {
+static enum button_event button_read_event() {
     static bool button_was_pressed = false;
     enum button_event button_event = BUTTON_IDLE;
 
@@ -93,16 +111,6 @@ enum button_event button_read_event() {
 
     return button_event;
 }
-
-/* ************************************************************************** */
-
-enum adsr_state {
-    ADSR_NONE,
-    ADSR_ATTACK,
-    ADSR_DECAY,
-    ADSR_SUSTAIN,
-    ADSR_RELEASE
-};
 
 /* ************************************************************************** */
 
@@ -149,15 +157,21 @@ static void loop(void) {
             adsr_state = ADSR_ATTACK;
             adsr_cycles = 0;
             break;
+
         case BUTTON_RELEASE:
             adsr_state = ADSR_RELEASE;
             adsr_cycles = 0;
             break;
-        default:
+
+        case BUTTON_IDLE:
             adsr_cycles++;
+            break;
     }
 
     switch (adsr_state) {
+        case ADSR_NONE:
+            break;
+
         case ADSR_ATTACK:
             if (
                 adsr_cycles < attack_cycles
@@ -165,15 +179,42 @@ static void loop(void) {
                 && volume < VOLUME_MAX
             ) {
                 volume++;
+            } else if (adsr_cycles >= attack_cycles) {
+                adsr_state = ADSR_DECAY;
             }
             break;
+
+        case ADSR_DECAY:
+            if (
+                adsr_cycles < attack_cycles + decay_cycles
+                && adsr_cycles - attack_cycles
+                   > decay_rate * (VOLUME_MAX - volume)
+                && volume > sustain_volume
+            ) {
+                volume--;
+            } else if (adsr_cycles >= attack_cycles + decay_cycles) {
+                adsr_state = ADSR_SUSTAIN;
+            }
+            break;
+
+        case ADSR_SUSTAIN:
+            break;
+
         case ADSR_RELEASE:
-            volume = 0;
+            if (
+                adsr_cycles < release_cycles
+                && adsr_cycles > release_rate * (sustain_volume - volume)
+                && volume > 0
+            ) {
+                volume--;
+            } else if (adsr_cycles >= release_cycles) {
+                adsr_state = ADSR_NONE;
+            }
+            break;
     }
 
     /* ********************************************************************** */
 
-    //uint8_t pwm_value = BUTTON_IS_PRESSED ? 128 + mixer : 0;
     uint8_t pwm_value = ((128 + mixer) * volume) >> 8;
 
     /* ********************************************************************** */
