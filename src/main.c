@@ -140,30 +140,35 @@ static void loop(void) {
 
     static uint32_t volume = 0;
     static uint32_t adsr_cycles = 0;
-
-    enum button_event button_event = button_read_event();
-
     static enum adsr_state adsr_state = ADSR_NONE;
 
-    if (button_event == BUTTON_PRESS) {
-        adsr_state = ADSR_ATTACK;
-        adsr_cycles = 0;
-    } else if (button_event == BUTTON_RELEASE) {
-        adsr_state = ADSR_RELEASE;
-        adsr_cycles = 0;
-    } else {
-        adsr_cycles++;
+    const enum button_event button_event = button_read_event();
+
+    switch (button_event) {
+        case BUTTON_PRESS:
+            adsr_state = ADSR_ATTACK;
+            adsr_cycles = 0;
+            break;
+        case BUTTON_RELEASE:
+            adsr_state = ADSR_RELEASE;
+            adsr_cycles = 0;
+            break;
+        default:
+            adsr_cycles++;
     }
 
-    if (
-        adsr_state == ADSR_ATTACK
-        && adsr_cycles < attack_cycles
-        && adsr_cycles > attack_rate * volume
-        && volume < VOLUME_MAX
-    ) {
-        volume++;
-    } else if (adsr_state == ADSR_RELEASE) {
-        volume = 0;
+    switch (adsr_state) {
+        case ADSR_ATTACK:
+            if (
+                adsr_cycles < attack_cycles
+                && adsr_cycles > attack_rate * volume
+                && volume < VOLUME_MAX
+            ) {
+                volume++;
+            }
+            break;
+        case ADSR_RELEASE:
+            volume = 0;
     }
 
     /* ********************************************************************** */
