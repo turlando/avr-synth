@@ -38,24 +38,8 @@
 
 /* ************************************************************************** */
 
-/* Number of voices. */
-#define OSCILLATORS_COUNT 1
-
-/* Volume of each oscillators is divided by 2^OSCILLATOR_ATTENUATION. */
-#define OSCILLATOR_ATTENUATION 0
-
-/* Voices frequency. */
 static const uint16_t oscillator_frequency = 207; /* Ab3 */
-
-/*
- * Low Frequency Oscillator frequency unscaled. This value is then divided by
- * lfo_scale to obtain the effective frequency.
- */
-static const uint16_t lfo_frequency = 1;
-static const uint8_t lfo_scale = 8;
-
 static const uint16_t oscillator_step = DDS_STEP(oscillator_frequency);
-static const uint16_t lfo_step = DDS_STEP(lfo_frequency);
 
 /* ************************************************************************** */
 
@@ -72,7 +56,7 @@ static const uint16_t release_time  = 5000;
 static const uint32_t attack_cycles = ADSR_CYCLES(attack_time);
 static const uint32_t attack_rate = ADSR_RATE(attack_cycles, VOLUME_MAX);
 
-static const uint32_t decay_cycles = ADSR_CYCLES(5000);
+static const uint32_t decay_cycles = ADSR_CYCLES(decay_time);
 static const uint32_t decay_rate
     = ADSR_RATE(decay_cycles, VOLUME_MAX - sustain_volume);
 
@@ -91,7 +75,7 @@ enum adsr_state {
 
 #define BUTTON_IS_PRESSED (port_d_get_pin(PORT_D_PIN_2) == PORT_LOW)
 
-static enum button_event {
+enum button_event {
     BUTTON_PRESS,
     BUTTON_IDLE,
     BUTTON_RELEASE,
@@ -134,15 +118,8 @@ int main(void) {
 }
 
 static void loop(void) {
-    static uint16_t accumulator = 0;
     static uint8_t cycles = 0;
-
-    /* ********************************************************************** */
-
-    accumulator += oscillator_step;
-
-    uint8_t step = accumulator >> 8;
-    uint16_t mixer = SAW_INT8_256[step];
+    static uint16_t accumulator = 0;
 
     /* ********************************************************************** */
 
@@ -170,6 +147,7 @@ static void loop(void) {
 
     switch (adsr_state) {
         case ADSR_NONE:
+            volume = 0;
             break;
 
         case ADSR_ATTACK:
@@ -215,7 +193,11 @@ static void loop(void) {
 
     /* ********************************************************************** */
 
-    uint8_t pwm_value = ((128 + mixer) * volume) >> 8;
+    /* Truncate accumulator and pick a sample from the wavetable. */
+    uint16_t sample = SAW_INT8_256[accumulator >> 8];
+
+    /* Convert from int8_t to uint8_t. */
+    uint8_t pwm_value = ((128 + sample) * volume) >> 8;
 
     /* ********************************************************************** */
 
@@ -226,4 +208,5 @@ static void loop(void) {
     /* ********************************************************************** */
 
     cycles++;
+    accumulator += oscillator_step;
 }
