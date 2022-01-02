@@ -46,7 +46,7 @@ LDFLAGS := -Wall -Wextra            \
            -Wl,--gc-sections        \
            -mmcu=$(MICROCONTROLLER)
 
-AVRDUDEFLAGS := -F -V                                 \
+AVRDUDEFLAGS := -F -D -V                              \
                 -c arduino -p $(MICROCONTROLLER)      \
                 -P $(SERIAL_DEVICE) -b $(AVRDUDE_BAUD)
 
