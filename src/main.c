@@ -73,6 +73,39 @@ static const uint32_t attack_rate = ADSR_RATE(attack_cycles, VOLUME_MAX);
 
 /* ************************************************************************** */
 
+enum button_event {
+    BUTTON_PRESS   = -1,
+    BUTTON_IDLE    = 0,
+    BUTTON_RELEASE = 1,
+};
+
+enum button_event button_read_event() {
+    static bool button_was_pressed = false;
+    enum button_event button_event = BUTTON_IDLE;
+
+    if (BUTTON_IS_PRESSED == true && button_was_pressed == false) {
+        button_was_pressed = true;
+        button_event = BUTTON_PRESS;
+    } else if (BUTTON_IS_PRESSED == false && button_was_pressed == true) {
+        button_was_pressed = false;
+        button_event = BUTTON_RELEASE;
+    }
+
+    return button_event;
+}
+
+/* ************************************************************************** */
+
+enum adsr_state {
+    ADSR_NONE,
+    ADSR_ATTACK,
+    ADSR_DECAY,
+    ADSR_SUSTAIN,
+    ADSR_RELEASE
+};
+
+/* ************************************************************************** */
+
 static void loop(void);
 
 int main(void) {
@@ -107,26 +140,29 @@ static void loop(void) {
 
     static uint32_t volume = 0;
     static uint32_t adsr_cycles = 0;
-    static bool button_was_pressed = false;
 
-    if (BUTTON_IS_PRESSED == true && button_was_pressed == false) {
-        button_was_pressed = true;
+    enum button_event button_event = button_read_event();
+
+    static enum adsr_state adsr_state = ADSR_NONE;
+
+    if (button_event == BUTTON_PRESS) {
+        adsr_state = ADSR_ATTACK;
         adsr_cycles = 0;
-    } else if (BUTTON_IS_PRESSED == false && button_was_pressed == true) {
-        button_was_pressed = false;
+    } else if (button_event == BUTTON_RELEASE) {
+        adsr_state = ADSR_RELEASE;
         adsr_cycles = 0;
     } else {
         adsr_cycles++;
     }
 
     if (
-        button_was_pressed == true
+        adsr_state == ADSR_ATTACK
         && adsr_cycles < attack_cycles
         && adsr_cycles > attack_rate * volume
         && volume < VOLUME_MAX
     ) {
         volume++;
-    } else if (button_was_pressed == false) {
+    } else if (adsr_state == ADSR_RELEASE) {
         volume = 0;
     }
 
