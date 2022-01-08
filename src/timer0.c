@@ -6,7 +6,8 @@ void timer0_init(
     const enum timer0_waveform_generation_mode waveform_generation_mode,
     const enum timer0_clock_select clock_select,
     const enum timer0_compare_output_mode compare_output_a_mode,
-    const enum timer0_compare_output_mode compare_output_b_mode
+    const enum timer0_compare_output_mode compare_output_b_mode,
+    const enum timer0_interrupt interrupts
 ) {
     TCCR0A |= waveform_generation_mode & 0x00FF;
     TCCR0B |= waveform_generation_mode >> 8;
@@ -15,6 +16,8 @@ void timer0_init(
 
     TCCR0A |= compare_output_a_mode << 6;
     TCCR0A |= compare_output_b_mode << 4;
+
+    TIMSK0 |= interrupts;
 }
 
 /* Drives OC0A, which is PD6, which is Arduino pin 6. */

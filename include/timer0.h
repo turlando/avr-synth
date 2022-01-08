@@ -48,11 +48,20 @@ enum timer0_compare_output_mode {
     TIMER0_COM_SET      = 1 << 1 | 1 << 0,
 };
 
+enum timer0_interrupt {
+    /*                    OCIE0B | OCIE0A | TOIE0 */
+    TIMER0_INT_DISABLED = 0 << 2 | 0 << 1 | 0 << 0,
+    TIMER0_INT_OVERFLOW = 0 << 2 | 0 << 1 | 1 << 0,
+    TIMER0_INT_MATCH_A  = 0 << 2 | 1 << 1 | 0 << 0,
+    TIMER0_INT_MATCH_B  = 1 << 2 | 0 << 1 | 0 << 0,
+};
+
 void timer0_init(
     enum timer0_waveform_generation_mode waveform_generation_mode,
     enum timer0_clock_select clock_select,
     enum timer0_compare_output_mode compare_output_a_mode,
-    enum timer0_compare_output_mode compare_output_b_mode
+    enum timer0_compare_output_mode compare_output_b_mode,
+    enum timer0_interrupt interrupts
 );
 
 /* Drives OC0A, which is PD6, which is Arduino output 6 */
