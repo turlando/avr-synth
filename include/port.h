@@ -37,9 +37,17 @@ enum port_d_pin {
 
 void port_b_set_output(enum port_b_pin pins);
 void port_b_set_input(enum port_b_pin pins);
+void port_b_set_high(enum port_b_pin pins);
+void port_b_set_low(enum port_b_pin pins);
+void port_b_set_pullup(enum port_b_pin pins);
+enum port_state port_b_get_pin(enum port_b_pin pin);
 
 void port_c_set_output(enum port_c_pin pins);
 void port_c_set_input(enum port_c_pin pins);
+void port_c_set_high(enum port_c_pin pins);
+void port_c_set_low(enum port_c_pin pins);
+void port_c_set_pullup(enum port_c_pin pins);
+enum port_state port_c_get_pin(enum port_c_pin pin);
 
 void port_d_set_output(enum port_d_pin pins);
 void port_d_set_input(enum port_d_pin pins);
