@@ -18,6 +18,9 @@ int main(void) {
 
     sei();
 
+    synth_set_wavetable(SYNTH_WAVETABLE_SIN);
+    synth_set_frequency(440);
+
     while(1);
 
     return 0;
