@@ -14,7 +14,7 @@
 
 static enum synth_wavetable g_wavetable = SYNTH_WAVETABLE_NONE;
 
-static enum synth_wavetable synth_get_wavetable() {
+enum synth_wavetable synth_get_wavetable() {
     return g_wavetable;
 }
 
