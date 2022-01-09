@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define PIN_COUNT 20
+
 enum pin_state {
     PIN_LOW =  0,
     PIN_HIGH = 1,
