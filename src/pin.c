@@ -1,6 +1,9 @@
 #include <pin.h>
 
+#include <stdint.h>
+
 #include <port.h>
+#include <adc.h>
 
 void pin_set_output(const enum pin pin) {
     switch (pin) {
@@ -137,7 +140,7 @@ void pin_set_high(const enum pin pin) {
     }
 }
 
-enum pin_state pin_get_state(const enum pin pin) {
+enum pin_state pin_digital_read(const enum pin pin) {
     switch (pin) {
         case PIN_0:  return (enum pin_state) port_d_get_pin(PORT_D_PIN_0);
         case PIN_1:  return (enum pin_state) port_d_get_pin(PORT_D_PIN_1);
@@ -164,4 +167,24 @@ enum pin_state pin_get_state(const enum pin pin) {
 
         default: return -1;
     }
+}
+
+static enum adc_input pin_to_adc_input(const enum pin pin) {
+    switch (pin) {
+        case PIN_A0: return ADC_INPUT_0;
+        case PIN_A1: return ADC_INPUT_1;
+        case PIN_A2: return ADC_INPUT_2;
+        case PIN_A3: return ADC_INPUT_3;
+        case PIN_A4: return ADC_INPUT_4;
+        case PIN_A5: return ADC_INPUT_5;
+        default: return -1;
+    }
+}
+
+uint16_t pin_analog_read(const enum pin pin) {
+    enum adc_input input = pin_to_adc_input(pin);
+    adc_set_input(input);
+    adc_start_conversion();
+    adc_wait_conversion();
+    return adc_read_all() & 0x3FF;
 }

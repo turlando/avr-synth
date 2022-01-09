@@ -1,6 +1,8 @@
 #ifndef PIN_H
 #define PIN_H
 
+#include <stdint.h>
+
 enum pin_state {
     PIN_LOW =  0,
     PIN_HIGH = 1,
@@ -36,6 +38,8 @@ void pin_set_input(enum pin pin);
 void pin_set_pullup(enum pin pin);
 void pin_set_low(enum pin pin);
 void pin_set_high(enum pin pin);
-enum pin_state pin_get_state(enum pin pin);
+
+enum pin_state pin_digital_read(enum pin pin);
+uint16_t pin_analog_read(enum pin pin);
 
 #endif /* PIN_H */
