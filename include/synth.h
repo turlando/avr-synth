@@ -40,7 +40,16 @@ void synth_set_frequency(
 
 /* ************************************************************************** */
 
-uint8_t synth_next_sample(enum synth_oscillator oscillator);
+#define SYNTH_VOLUME_MAX 255U
+
+void synth_set_volume(
+    const enum synth_oscillator oscillator,
+    const uint8_t volume
+);
+
+/* ************************************************************************** */
+
+uint8_t synth_next_sample();
 
 /* ************************************************************************** */
 

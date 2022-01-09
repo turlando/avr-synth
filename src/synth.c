@@ -56,6 +56,23 @@ void synth_set_frequency(
 
 /* ************************************************************************** */
 
+static uint8_t g_volumes[SYNTH_OSCILLATORS_COUNT] = { 0 };
+
+uint8_t synth_get_volume(
+    const enum synth_oscillator oscillator
+) {
+    return g_volumes[oscillator];
+}
+
+void synth_set_volume(
+    const enum synth_oscillator oscillator,
+    const uint8_t volume
+) {
+    g_volumes[oscillator] = volume;
+}
+
+/* ************************************************************************** */
+
 static int8_t synth_get_sample(
     const enum synth_wavetable wavetable,
     const uint8_t i
@@ -74,8 +91,27 @@ static int8_t synth_get_sample(
 
 /* ************************************************************************** */
 
-uint8_t synth_next_sample(const enum synth_oscillator oscillator) {
-    static uint16_t accumulator = 0;
-    accumulator += synth_get_accumulator_step(oscillator);
-    return synth_get_sample(synth_get_wavetable(oscillator), accumulator >> 8);
+static uint8_t synth_next_oscillator_sample(
+    const enum synth_oscillator oscillator
+) {
+    static uint16_t accumulators[SYNTH_OSCILLATORS_COUNT] = { 0 };
+    accumulators[oscillator] += synth_get_accumulator_step(oscillator);
+
+    return synth_get_sample(
+        synth_get_wavetable(oscillator),
+        accumulators[oscillator] >> 8
+    );
+}
+
+uint8_t synth_next_sample() {
+    uint8_t mixer = 0;
+
+    for (uint8_t i = 0; i < SYNTH_OSCILLATORS_COUNT; i++) {
+        uint8_t sample
+            = synth_next_oscillator_sample(i)
+            * synth_get_volume(i) / SYNTH_VOLUME_MAX;
+        mixer += sample;
+    }
+
+    return mixer;
 }

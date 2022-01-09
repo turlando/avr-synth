@@ -28,8 +28,13 @@ int main(void) {
 
     sei();
 
-    synth_set_wavetable(SYNTH_OSCILLATOR_A, SYNTH_WAVETABLE_SIN);
-    synth_set_frequency(SYNTH_OSCILLATOR_A, 440);
+    synth_set_wavetable(SYNTH_OSCILLATOR_A, SYNTH_WAVETABLE_SAW);
+    synth_set_frequency(SYNTH_OSCILLATOR_A, 262);
+    synth_set_volume(SYNTH_OSCILLATOR_A, 127);
+
+    synth_set_wavetable(SYNTH_OSCILLATOR_B, SYNTH_WAVETABLE_SAW);
+    synth_set_frequency(SYNTH_OSCILLATOR_B, 330);
+    synth_set_volume(SYNTH_OSCILLATOR_B, 127);
 
     while(1) loop();
 
@@ -39,7 +44,7 @@ int main(void) {
 /* Interrupts *************************************************************** */
 
 ISR(TIMER0_OVF_vect) {
-    timer0_set_compare_register_a(synth_next_sample(SYNTH_OSCILLATOR_A));
+    timer0_set_compare_register_a(synth_next_sample());
 }
 
 /* Main event loop ********************************************************** */
