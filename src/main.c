@@ -2,26 +2,37 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include <pin.h>
 #include <adc.h>
 #include <timer0.h>
+#include <button.h>
 #include <synth.h>
 
 /* Configuration ************************************************************ */
 
-#define SPEAKER_PIN PIN_6
-#define KNOB_A_PIN  PIN_A2
-#define KNOB_B_PIN  PIN_A4
+#define BUTTON_B_PIN PIN_2
+#define SPEAKER_PIN  PIN_6
+#define KNOB_A_PIN   PIN_A2
+#define KNOB_B_PIN   PIN_A4
+#define BUTTON_A_PIN PIN_4
 
 /* Main ********************************************************************* */
 
 void loop(void);
 
 int main(void) {
-    pin_set_output(SPEAKER_PIN);
+    pin_set_input(BUTTON_A_PIN);
+    pin_set_pullup(BUTTON_A_PIN);
+
+    pin_set_input(BUTTON_B_PIN);
+    pin_set_pullup(BUTTON_B_PIN);
+
     pin_set_input(KNOB_A_PIN);
     pin_set_input(KNOB_B_PIN);
+
+    pin_set_output(SPEAKER_PIN);
 
     timer0_init(
         TIMER0_WGM_PWM_FF,
@@ -58,12 +69,28 @@ ISR(TIMER0_OVF_vect) {
     timer0_set_compare_register_a(synth_next_sample());
 }
 
+/* Helper functions ********************************************************* */
+
+void set_next_wavetable(const enum synth_oscillator oscillator) {
+    const enum synth_wavetable current = synth_get_wavetable(oscillator);
+    synth_set_wavetable(oscillator, (current + 1) % SYNTH_WAVETABLES_COUNT);
+}
+
 /* Main event loop ********************************************************** */
 
 void loop(void) {
-    uint16_t knob_a = pin_analog_read(KNOB_A_PIN);
-    uint16_t knob_b = pin_analog_read(KNOB_B_PIN);
+    const enum button_event button_a = button_get_event(BUTTON_A_PIN);
+    const enum button_event button_b = button_get_event(BUTTON_B_PIN);
+
+    const uint16_t knob_a = pin_analog_read(KNOB_A_PIN);
+    const uint16_t knob_b = pin_analog_read(KNOB_B_PIN);
 
     synth_set_frequency(SYNTH_OSCILLATOR_A, knob_a);
     synth_set_frequency(SYNTH_OSCILLATOR_B, knob_b);
+
+    if (button_a == BUTTON_PRESSED)
+        set_next_wavetable(SYNTH_OSCILLATOR_A);
+
+    if (button_b == BUTTON_PRESSED)
+        set_next_wavetable(SYNTH_OSCILLATOR_B);
 }
