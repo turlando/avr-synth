@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#include <wave/sin_int8_256.h>
-#include <wave/saw_int8_256.h>
+#include <wave/sin_uint8_256.h>
+#include <wave/saw_uint8_256.h>
 
 /* ************************************************************************** */
 
@@ -50,9 +50,9 @@ static int8_t synth_get_sample(
         case SYNTH_WAVETABLE_NONE:
             return 0;
         case SYNTH_WAVETABLE_SIN:
-            return SIN_INT8_256[i];
+            return WAVE_SIN_UINT8_256[i];
         case SYNTH_WAVETABLE_SAW:
-            return SAW_INT8_256[i];
+            return WAVE_SAW_UINT8_256[i];
     }
 
     return 0;
@@ -63,5 +63,5 @@ static int8_t synth_get_sample(
 uint8_t synth_next_sample() {
     static uint16_t accumulator = 0;
     accumulator += synth_get_accumulator_step();
-    return 128 + synth_get_sample(synth_get_wavetable(), accumulator >> 8);
+    return synth_get_sample(synth_get_wavetable(), accumulator >> 8);
 }
