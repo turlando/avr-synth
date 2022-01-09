@@ -12,32 +12,46 @@
 
 /* ************************************************************************** */
 
-static enum synth_wavetable g_wavetable = SYNTH_WAVETABLE_NONE;
+static enum synth_wavetable g_wavetables[SYNTH_OSCILLATORS_COUNT]
+    = { SYNTH_WAVETABLE_NONE };
 
-enum synth_wavetable synth_get_wavetable() {
-    return g_wavetable;
+enum synth_wavetable synth_get_wavetable(
+    const enum synth_oscillator oscillator
+) {
+    return g_wavetables[oscillator];
 }
 
-void synth_set_wavetable(const enum synth_wavetable wavetable) {
-    g_wavetable = wavetable;
+void synth_set_wavetable(
+    const enum synth_oscillator oscillator,
+    const enum synth_wavetable wavetable
+) {
+    g_wavetables[oscillator] = wavetable;
 }
 
 /* ************************************************************************** */
 
-static uint16_t g_accumulator_step = 0;
-static uint16_t g_frequency = 0;
+static uint16_t g_accumulators_step[SYNTH_OSCILLATORS_COUNT] = { 0 };
+static uint16_t g_frequencies[SYNTH_OSCILLATORS_COUNT] = { 0 };
 
-static uint16_t synth_get_accumulator_step() {
-    return g_accumulator_step;
+static uint16_t synth_get_accumulator_step(
+    const enum synth_oscillator oscillator
+) {
+    return g_accumulators_step[oscillator];
 }
 
-static void synth_set_accumulator_step(const uint16_t accumulator_step) {
-    g_accumulator_step = accumulator_step;
+static void synth_set_accumulator_step(
+    const enum synth_oscillator oscillator,
+    const uint16_t accumulator_step
+) {
+    g_accumulators_step[oscillator] = accumulator_step;
 }
 
-void synth_set_frequency(const uint16_t frequency) {
-    g_frequency = frequency;
-    synth_set_accumulator_step(ACCUMULATOR_STEP(frequency));
+void synth_set_frequency(
+    const enum synth_oscillator oscillator,
+    const uint16_t frequency
+) {
+    g_frequencies[oscillator] = frequency;
+    synth_set_accumulator_step(oscillator, ACCUMULATOR_STEP(frequency));
 }
 
 /* ************************************************************************** */
@@ -60,8 +74,8 @@ static int8_t synth_get_sample(
 
 /* ************************************************************************** */
 
-uint8_t synth_next_sample() {
+uint8_t synth_next_sample(const enum synth_oscillator oscillator) {
     static uint16_t accumulator = 0;
-    accumulator += synth_get_accumulator_step();
-    return synth_get_sample(synth_get_wavetable(), accumulator >> 8);
+    accumulator += synth_get_accumulator_step(oscillator);
+    return synth_get_sample(synth_get_wavetable(oscillator), accumulator >> 8);
 }
