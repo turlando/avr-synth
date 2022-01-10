@@ -12,11 +12,12 @@
 
 /* Configuration ************************************************************ */
 
-#define BUTTON_B_PIN PIN_2
-#define SPEAKER_PIN  PIN_6
-#define KNOB_A_PIN   PIN_A2
-#define KNOB_B_PIN   PIN_A4
 #define BUTTON_A_PIN PIN_4
+#define BUTTON_B_PIN PIN_2
+#define KNOB_A_PIN   PIN_A0
+#define KNOB_B_PIN   PIN_A2
+#define KNOB_MIX_PIN PIN_A1
+#define SPEAKER_PIN  PIN_6
 
 /* Main ********************************************************************* */
 
@@ -50,13 +51,13 @@ int main(void) {
 
     sei();
 
-    synth_set_wavetable(SYNTH_OSCILLATOR_A, SYNTH_WAVETABLE_SIN);
+    synth_set_wavetable(SYNTH_OSCILLATOR_A, SYNTH_WAVETABLE_NONE);
     synth_set_frequency(SYNTH_OSCILLATOR_A, 0);
-    synth_set_volume(SYNTH_OSCILLATOR_A, 127);
+    synth_set_volume(SYNTH_OSCILLATOR_A, 0);
 
-    synth_set_wavetable(SYNTH_OSCILLATOR_B, SYNTH_WAVETABLE_SAW);
+    synth_set_wavetable(SYNTH_OSCILLATOR_B, SYNTH_WAVETABLE_NONE);
     synth_set_frequency(SYNTH_OSCILLATOR_B, 0);
-    synth_set_volume(SYNTH_OSCILLATOR_B, 127);
+    synth_set_volume(SYNTH_OSCILLATOR_B, 0);
 
     while(1) loop();
 
@@ -84,13 +85,17 @@ void loop(void) {
 
     const uint16_t knob_a = pin_analog_read(KNOB_A_PIN);
     const uint16_t knob_b = pin_analog_read(KNOB_B_PIN);
-
-    synth_set_frequency(SYNTH_OSCILLATOR_A, knob_a);
-    synth_set_frequency(SYNTH_OSCILLATOR_B, knob_b);
+    const uint16_t knob_mix = pin_analog_read(KNOB_MIX_PIN);
 
     if (button_a == BUTTON_PRESSED)
         set_next_wavetable(SYNTH_OSCILLATOR_A);
 
     if (button_b == BUTTON_PRESSED)
         set_next_wavetable(SYNTH_OSCILLATOR_B);
+
+    synth_set_frequency(SYNTH_OSCILLATOR_A, knob_a);
+    synth_set_frequency(SYNTH_OSCILLATOR_B, knob_b);
+
+    synth_set_volume(SYNTH_OSCILLATOR_A, SYNTH_VOLUME_MAX - (knob_mix >> 2));
+    synth_set_volume(SYNTH_OSCILLATOR_B, (knob_mix >> 2));
 }
