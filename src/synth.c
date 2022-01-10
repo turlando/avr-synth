@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include <wave/sin_uint8_256.h>
+#include <wave/tri_uint8_256.h>
 #include <wave/saw_uint8_256.h>
 
 /* ************************************************************************** */
@@ -82,6 +83,8 @@ static int8_t synth_get_sample(
             return 0;
         case SYNTH_WAVETABLE_SIN:
             return WAVE_SIN_UINT8_256[i];
+        case SYNTH_WAVETABLE_TRI:
+            return WAVE_TRI_UINT8_256[i];
         case SYNTH_WAVETABLE_SAW:
             return WAVE_SAW_UINT8_256[i];
     }

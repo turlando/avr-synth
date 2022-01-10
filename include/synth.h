@@ -14,11 +14,12 @@ enum synth_oscillator {
 
 /* ************************************************************************** */
 
-#define SYNTH_WAVETABLES_COUNT 3
+#define SYNTH_WAVETABLES_COUNT 4
 
 enum synth_wavetable {
     SYNTH_WAVETABLE_NONE,
     SYNTH_WAVETABLE_SIN,
+    SYNTH_WAVETABLE_TRI,
     SYNTH_WAVETABLE_SAW,
 };
 
